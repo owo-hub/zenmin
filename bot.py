@@ -5,7 +5,7 @@ import os
 client = discord.Client()
 
 @client.event
-async def on_ready();
+async def on_ready():
     print("login")
     print(client.user.name)
     print(client.user.id)
