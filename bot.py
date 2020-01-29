@@ -17,10 +17,14 @@ async def on_ready():
 async def on_message(message):
     if message.content.startswith("hi"):
         await client.send_message(message.channel, "HI")
+        
+    if message.content.startswith("test"):
+        await client.send_message(message.channel, "Works!")
 
     if message.content.startswith("/dm"):
         author = message.guild.get_member(int(message.content[4:22]))
         msg = message.content[23:]
+        print("send dm!")
         await author.send(msg)
 
 access_token = os.environ["BOT_TOKEN"]
