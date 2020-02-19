@@ -318,7 +318,7 @@ async def on_message(message):
                 tank_tier = re.findall(r'<img class="competitive-rank-tier-icon" src="(https://.*?png)"', tank_html)
                 tank_level = re.findall(r'<div class="competitive-rank-level">(.*?)</div>', tank_html)
                 embed.set_thumbnail(url=tank_tier[0])
-                embed.add_field(name="돌격 실력 평점", value=f"> {tank_level[0]}")
+                embed.add_field(name="돌격 실력 평점", value=f"```fix\n{tank_level[0]}```")
             if exist_damage:
                 damage_html = htm_content[htm_content.find("공격 실력 평점"):htm_content.find("공격 실력 평점") + 200]
                 damage_tier = re.findall(r'<img class="competitive-rank-tier-icon" src="(https://.*?png)"', damage_html)
