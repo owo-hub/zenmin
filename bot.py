@@ -53,7 +53,7 @@ async def on_ready():
 async def on_message(message):
     admins = [524980170554212363, 252302363052867587, 276689714592088064, 533859758583840779]
     welcome_channel = client.get_channel(564454482608390155)
-    notice_channel = client.get_channel(541648583707983902)
+    notice_channel = client.get_channel(679540094012882954)
     botcmd_channel = client.get_channel(650340295061536769)
     badword_log_channel = client.get_channel(672192045649231885)
     owohub_id = client.get_guild(539446073320669185)
@@ -396,7 +396,7 @@ async def on_message(message):
 @client.event
 async def on_member_join(member):
     welcome_channel = client.get_channel(564454482608390155)
-    notice_channel = client.get_channel(541648583707983902)
+    notice_channel = client.get_channel(679540094012882954)
     botcmd_channel = client.get_channel(650340295061536769)
 
     from datetime import datetime
