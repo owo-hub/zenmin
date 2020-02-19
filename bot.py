@@ -262,7 +262,7 @@ async def on_message(message):
         await message.channel.send('{0}중 {1}\n'.format(len(search_results), randomNum) + 'http://www.youtube.com/watch?v=' + search_results[randomNum])
 
     if message.content.startswith("오떱아 배틀태그 "):
-        tag = message.content[7:]
+        tag = message.content[9:]
         battletag = tag.replace("#", "-")
         print(f"Replace tag '{tag}' to '{battletag}'")
         url = 'https://playoverwatch.com/ko-kr/career/pc/' + battletag
