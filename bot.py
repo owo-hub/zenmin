@@ -5,6 +5,7 @@ import datetime
 import os
 import random
 import traceback
+import bs4
 
 access_token = os.environ["BOT_TOKEN"]
 
@@ -261,49 +262,78 @@ async def on_message(message):
         await message.channel.send('{0}중 {1}\n'.format(len(search_results), randomNum) + 'http://www.youtube.com/watch?v=' + search_results[randomNum])
 
     if message.content.startswith("오떱아 배틀태그 "):
-        tag = message.content[9:]
+        tag = message.content[7:]
         battletag = tag.replace("#", "-")
-        print(tag + " to " + battletag)
+        print(f"Replace tag '{tag}' to '{battletag}'")
         url = 'https://playoverwatch.com/ko-kr/career/pc/' + battletag
         url = urllib.parse.urlsplit(url)
         url = list(url)
-        print(url)
         url[2] = urllib.parse.quote(url[2])
         profile_url = urllib.parse.urlunsplit(url)
-        print(profile_url)
+        print(f"{tag}'s Profile: {profile_url}")
         htm_content = urllib.request.urlopen(profile_url).read()
+        htm_content = bs4.BeautifulSoup(htm_content, 'html.parser')
         htm_content = str(htm_content)
-        print(htm_content)
+        # print(f"Found HTML: {htm_content}")
+
         profile_img = re.findall(r'<img class="player-portrait" src="(https://.*?png)"', htm_content)
         if len(profile_img) < 1:
-            await message.channel.send("유저를 찾을 수 없습니다. (소대문자를 확인해주세요!)")
+            print(f"Failed to find {tag}'s profile.")
+            await message.channel.send("유저 정보를 찾을 수 없습니다.\n(배틀태그 검색은 대소문자를 구분하므로 대소문자를 정확히 입력해야 합니다.)")
             return
-        print("profile image: " + profile_img[0])
-        quickplay_img = re.findall(r'background-image: (https://.*?png)" data-js="heroMastheadImage"', htm_content)
+
+        isPublic = htm_content.find('<div class="masthead-permission-level-container u-center-block">') == -1
+        print(f"Is profile public: {isPublic}")
+
+        print("Profile icon: " + profile_img[0])
+        quickplay_img = re.findall(r'data-js="heroMastheadImage" style="background-image: (https://.*?png)">', htm_content)
         player_level_img = htm_content[htm_content.find('<div class="player-level" style'):htm_content.find('<div class="player-rank" style')]
         player_level_img = re.findall(r' (https://.*?png) ', player_level_img)
         print(player_level_img)
-        dealtier_img = re.findall(r'<img class="competitive-rank-tier-icon" src="(https://.*?png)"', htm_content)
-        dealscore = re.findall(r'<div class="competitive-rank-level">(.*?)</div>', htm_content)
-        print(dealscore)
+
+        exist_tank = htm_content.find("돌격 실력 평점") != -1
+        exist_damage = htm_content.find("공격 실력 평점") != -1
+        exist_support = htm_content.find("지원 실력 평점") != -1
+        print(f"돌격: {exist_tank}, 공격: {exist_damage}, 지원: {exist_support}")
+
         print(quickplay_img)
+
         from datetime import datetime
         embed = discord.Embed(
-            description="Searched by {.mention}".format(message.author),
+            title=f"🔗 프로필 링크",
             timestamp=datetime.utcnow(),
-            colour=discord.Colour.green()
+            # description=f"🔓 공개 프로필" if isPublic == True else f"🔒 비공개 프로필",
+            colour=discord.Colour.orange(),
+            url=profile_url
         )
-        embed.set_author(name=tag, icon_url=profile_img[0], url=profile_url)
-        embed.set_image(url=quickplay_img[0])
-        embed.set_footer(text="72", icon_url=player_level_img[0])
-        if len(dealtier_img) > 1:
-            embed.add_field(name="돌격", value=dealscore[0])
-            embed.add_field(name="공격", value=dealscore[1])
-            embed.add_field(name="지원", value=dealscore[2])
-            embed.set_thumbnail(url=dealtier_img[1])
+        embed.set_author(name=tag, icon_url=profile_img[0])
+
+        embed.set_footer(text=f"🔓 공개 프로필" if isPublic == True else f"🔒 비공개 프로필")
+        if quickplay_img:
+            embed.set_image(url=quickplay_img[0])
+
+        if exist_tank or exist_damage or exist_support:
+            if exist_tank:
+                tank_html = htm_content[htm_content.find("돌격 실력 평점"):htm_content.find("돌격 실력 평점") + 200]
+                tank_tier = re.findall(r'<img class="competitive-rank-tier-icon" src="(https://.*?png)"', tank_html)
+                tank_level = re.findall(r'<div class="competitive-rank-level">(.*?)</div>', tank_html)
+                embed.set_thumbnail(url=tank_tier[0])
+                embed.add_field(name="돌격 실력 평점", value=f"> {tank_level[0]}")
+            if exist_damage:
+                damage_html = htm_content[htm_content.find("공격 실력 평점"):htm_content.find("공격 실력 평점") + 200]
+                damage_tier = re.findall(r'<img class="competitive-rank-tier-icon" src="(https://.*?png)"', damage_html)
+                damage_level = re.findall(r'<div class="competitive-rank-level">(.*?)</div>', damage_html)
+                embed.set_thumbnail(url=damage_tier[0])
+                embed.add_field(name="공격 실력 평점", value=f"```fix\n{damage_level[0]}```")
+            if exist_support:
+                support_html = htm_content[htm_content.find("지원 실력 평점"):htm_content.find("지원 실력 평점") + 200]
+                support_tier = re.findall(r'<img class="competitive-rank-tier-icon" src="(https://.*?png)"', support_html)
+                support_level = re.findall(r'<div class="competitive-rank-level">(.*?)</div>', support_html)
+                embed.set_thumbnail(url=support_tier[0])
+                embed.add_field(name="지원 실력 평점", value=f"```fix\n{support_level[0]}```")
         else:
             embed.set_thumbnail(url=profile_img[0])
-        await message.channel.send("", embed=embed)
+        await message.channel.send(embed=embed)
 
     if message.content.startswith("오떱아 opgg "):
         tag = message.content[9:]
