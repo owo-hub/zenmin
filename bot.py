@@ -6,6 +6,8 @@ import os
 import random
 import traceback
 import bs4
+import asyncio
+import threading
 
 access_token = os.environ["BOT_TOKEN"]
 
@@ -39,6 +41,26 @@ regionals = {'a': '\N{REGIONAL INDICATOR SYMBOL LETTER A}', 'b': '\N{REGIONAL IN
 
 # client = commands.Bot(command_prefix='!')
 
+youtube_post_channel = 650334329817268264
+last_url = []
+
+async def youtubelast(search):
+    global last_url
+    while not client.is_closed():
+        query_string = urllib.parse.urlencode({
+            'search_query': search
+        })
+        htm_content = urllib.request.urlopen(
+            'http://www.youtube.com/results?' + query_string
+        )
+        search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
+        if not search_results[0] in last_url:
+            last_url.append(search_results[0])
+            print("New video!: {}".format('http://www.youtube.com/watch?v=' + search_results[0]))
+            await client.get_channel(youtube_post_channel).send('http://www.youtube.com/watch?v=' + search_results[0])
+        print(last_url)
+        await asyncio.sleep(10)
+
 @client.event
 async def on_ready():
     print("Bot is ready.")
@@ -46,6 +68,7 @@ async def on_ready():
     print(client.user.id)
     print("--------------------")
 
+    asyncio.create_task(youtubelast('오버워치 워크샵'))
     await client.change_presence(status=discord.Status.idle)
     # 봇 활동 (type: 0=하는중, 1=트위치 생방송중, 2=듣는중)
     await client.change_presence(activity=discord.Activity(name='오떱아 도와줘', type=2))
@@ -260,6 +283,16 @@ async def on_message(message):
         randomNum = random.randrange(0, len(search_results))
         print("총 {0}개 검색, {1}번 출력".format(len(search_results), randomNum))
         await message.channel.send('{0}중 {1}\n'.format(len(search_results), randomNum) + 'http://www.youtube.com/watch?v=' + search_results[randomNum])
+
+    if message.content.startswith("오떱아 워크샵"):
+        query_string = urllib.parse.urlencode({
+            'search_query': '오버워치 워크샵'
+        })
+        htm_content = urllib.request.urlopen(
+            'http://www.youtube.com/results?' + query_string
+        )
+        search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
+        await message.channel.send('http://www.youtube.com/watch?v=' + search_results[0])
 
     if message.content.startswith("오떱아 배틀태그 "):
         tag = message.content[9:]
