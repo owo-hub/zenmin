@@ -58,7 +58,6 @@ async def youtubelast(search):
             last_url.append(search_results[0])
             print("New video!: {}".format('http://www.youtube.com/watch?v=' + search_results[0]))
             await client.get_channel(youtube_post_channel).send('http://www.youtube.com/watch?v=' + search_results[0])
-        print(last_url)
         await asyncio.sleep(10)
 
 @client.event
