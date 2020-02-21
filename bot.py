@@ -51,7 +51,7 @@ async def youtubelast(search):
             'search_query': search
         })
         htm_content = urllib.request.urlopen(
-            'http://www.youtube.com/results?' + query_string
+            'http://www.youtube.com/results?' + query_string + '&sp=CAI%253D'
         )
         search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
         if not search_results[0] in last_url:
