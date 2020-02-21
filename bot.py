@@ -58,6 +58,7 @@ async def youtubelast(search):
             last_url.append(search_results[0])
             print("New video!: {}".format('http://www.youtube.com/watch?v=' + search_results[0]))
             await client.get_channel(youtube_post_channel).send('http://www.youtube.com/watch?v=' + search_results[0])
+        print(last_url)
         await asyncio.sleep(10)
 
 @client.event
@@ -67,10 +68,12 @@ async def on_ready():
     print(client.user.id)
     print("--------------------")
 
-    asyncio.create_task(youtubelast('오버워치 워크샵'))
-    await client.change_presence(status=discord.Status.idle)
+    loop = asyncio.get_event_loop()
+    loop.create_task(youtubelast('오버워치 워크샵'))
+    # await client.change_presence(status=discord.Status.idle)
     # 봇 활동 (type: 0=하는중, 1=트위치 생방송중, 2=듣는중)
-    await client.change_presence(activity=discord.Activity(name='오떱아 도와줘', type=2))
+    # await client.change_presence(activity=discord.Activity(name='오떱아 도와줘', type=2))
+    await client.change_presence(activity=discord.Streaming(platform='Twitch', name='오떱아 도와줘', url='https://www.twitch.tv/dlwlgks4064', twitch_name='dlwlgks4064'))
 
 @client.event
 async def on_message(message):
