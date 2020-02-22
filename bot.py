@@ -8,6 +8,7 @@ import traceback
 import bs4
 import asyncio
 import threading
+import requests
 
 access_token = os.environ["BOT_TOKEN"]
 
@@ -45,23 +46,20 @@ youtube_post_channel = 650334329817268264
 last_url = []
 
 async def youtubelast(search):
-    global youtube_post_channel
     global last_url
     while not client.is_closed():
         query_string = urllib.parse.urlencode({
             'search_query': search
         })
-        await asyncio.sleep(1)
         htm_content = urllib.request.urlopen(
             'http://www.youtube.com/results?' + query_string + '&sp=CAI%253D'
         )
-        await asyncio.sleep(1)
         search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
-        await asyncio.sleep(1)
-        if not search_results[0] in last_url:
+        # print(search_results.__len__())
+        if len(search_results) > 0 and search_results[0] not in last_url:
             last_url.append(search_results[0])
             await client.get_channel(youtube_post_channel).send('http://www.youtube.com/watch?v=' + search_results[0])
-        await asyncio.sleep(7)
+        await asyncio.sleep(10)
 
 @client.event
 async def on_ready():
@@ -293,10 +291,10 @@ async def on_message(message):
             'search_query': '오버워치 워크샵'
         })
         htm_content = urllib.request.urlopen(
-            'http://www.youtube.com/results?' + query_string
+            'http://www.youtube.com/results?' + query_string + '&sp=CAI%253D'
         )
         search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
-        await message.channel.send('http://www.youtube.com/watch?v=' + search_results[0])
+        await message.channel.send('제가 찾은 오버워치 워크샵 최신 영상입니다! ' + 'http://www.youtube.com/watch?v=' + search_results[0])
 
     if message.content.startswith("오떱아 배틀태그 "):
         tag = message.content[9:]
