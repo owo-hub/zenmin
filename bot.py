@@ -45,21 +45,23 @@ youtube_post_channel = 650334329817268264
 last_url = []
 
 async def youtubelast(search):
+    global youtube_post_channel
     global last_url
     while not client.is_closed():
         query_string = urllib.parse.urlencode({
             'search_query': search
         })
+        await asyncio.sleep(1)
         htm_content = urllib.request.urlopen(
             'http://www.youtube.com/results?' + query_string + '&sp=CAI%253D'
         )
+        await asyncio.sleep(1)
         search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
+        await asyncio.sleep(1)
         if not search_results[0] in last_url:
             last_url.append(search_results[0])
-            print("New video!: {}".format('http://www.youtube.com/watch?v=' + search_results[0]))
             await client.get_channel(youtube_post_channel).send('http://www.youtube.com/watch?v=' + search_results[0])
-        print(last_url)
-        await asyncio.sleep(10)
+        await asyncio.sleep(7)
 
 @client.event
 async def on_ready():
