@@ -42,7 +42,6 @@ regionals = {'a': '\N{REGIONAL INDICATOR SYMBOL LETTER A}', 'b': '\N{REGIONAL IN
 
 # client = commands.Bot(command_prefix='!')
 
-youtube_post_channel = 650334329817268264
 last_url = []
 
 async def youtubelast(search):
@@ -56,9 +55,12 @@ async def youtubelast(search):
         )
         search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
         # print(search_results.__len__())
-        if len(search_results) > 0 and search_results[0] not in last_url:
-            last_url.append(search_results[0])
-            await client.get_channel(youtube_post_channel).send('http://www.youtube.com/watch?v=' + search_results[0])
+        if len(search_results) > 0:
+            if search_results[0] not in last_url:
+                last_url.append(search_results[0])
+                await client.get_channel(650334329817268264).send('http://www.youtube.com/watch?v=' + search_results[0])
+        date = datetime.datetime.now()
+        await client.get_channel(680969443362209819).edit(name=str(date))
         await asyncio.sleep(10)
 
 @client.event
@@ -68,11 +70,7 @@ async def on_ready():
     print(client.user.id)
     print("--------------------")
 
-    loop = asyncio.get_event_loop()
-    loop.create_task(youtubelast('오버워치 워크샵'))
-    # await client.change_presence(status=discord.Status.idle)
-    # 봇 활동 (type: 0=하는중, 1=트위치 생방송중, 2=듣는중)
-    # await client.change_presence(activity=discord.Activity(name='오떱아 도와줘', type=2))
+    asyncio.get_event_loop().create_task(youtubelast('오버워치 워크샵'))
     await client.change_presence(activity=discord.Streaming(platform='Twitch', name='오떱아 도와줘', url='https://www.twitch.tv/dlwlgks4064', twitch_name='dlwlgks4064'))
 
 @client.event
@@ -286,7 +284,7 @@ async def on_message(message):
         print("총 {0}개 검색, {1}번 출력".format(len(search_results), randomNum))
         await message.channel.send('{0}중 {1}\n'.format(len(search_results), randomNum) + 'http://www.youtube.com/watch?v=' + search_results[randomNum])
 
-    if message.content.startswith("오떱아 워크샵"):
+    if message.content == "오떱아 워크샵 영상":
         query_string = urllib.parse.urlencode({
             'search_query': '오버워치 워크샵'
         })
@@ -373,18 +371,23 @@ async def on_message(message):
     if message.content.startswith("오떱아 opgg "):
         tag = message.content[9:]
         battletag = tag.replace("#", "%23")
-        print(tag + " to " + battletag)
+        print(f"Replace tag '{tag}' to '{battletag}'")
         url = 'https://overwatch.op.gg/search/?playerName=' + battletag
         url = urllib.parse.urlsplit(url)
         url = list(url)
-        print(url)
         url[2] = urllib.parse.quote(url[2])
         profile_url = urllib.parse.urlunsplit(url)
-        print(profile_url)
+        print(f"{tag}'s Profile: {profile_url}")
         htm_content = urllib.request.urlopen(profile_url).read()
+        htm_content = bs4.BeautifulSoup(htm_content, 'html.parser')
         htm_content = str(htm_content)
-        profile_img = re.findall(r'<div class="ProfileImage"> <div> <img src="(https://.*?png)"', htm_content)
-        print(profile_img)
+
+        print(htm_content)
+        most_hero_img = re.findall(r'https://d1u1mce87gyfbn.cloudfront.net/hero(.*?).png', htm_content)
+        player_level = re.findall(r'<div class="Level">LV.(.*?)</div>', htm_content)
+
+        print(most_hero_img)
+        print(player_level)
 
     if message.content.startswith("오떱아 서버정보"):
         findbots = sum(1 for message.author in message.guild.members if message.author.bot)
@@ -456,6 +459,42 @@ async def on_message(message):
         )
         embed.set_author(name=message.author, icon_url=message.author.avatar_url)
         embed.set_footer(text="배너를 가릴려면 '-배너안볼래'를 입력하세요.")
+        await message.channel.send(embed=embed)
+
+    if message.content.startswith("오떱아 워크샵 검색 "):
+        search = message.content[11:]
+        print(f"Searching '{search}' from workshop.codes")
+        url = f'https://www.workshop.codes/search/{search}'
+        url = urllib.parse.urlsplit(url)
+        url = list(url)
+        url[2] = urllib.parse.quote(url[2])
+        profile_url = urllib.parse.urlunsplit(url)
+        htm_content = urllib.request.urlopen(profile_url).read()
+        htm_content = bs4.BeautifulSoup(htm_content, 'html.parser')
+        htm_content = str(htm_content)
+        # print(f"Found HTML: {htm_content}")
+
+        items = re.findall(r'<div class="item__title">\n<a href="/(.*?)</a>', htm_content)
+        print(items)
+
+        from datetime import datetime
+        embed = discord.Embed(
+            description=f'**{len(items)}** Items detected',
+            colour=discord.Color.orange(),
+            timestamp=datetime.utcnow()
+        )
+
+        embed.set_author(name=f"Search '{search}' from workshop.codes",
+                         icon_url='https://i.imgur.com/VXLlVq0.png',
+                         url=f'https://www.workshop.codes/search/{search}')
+
+        for i in items:
+            code = i[0:i.find('">')]
+            title = i[i.find('">')+2:len(i)]
+            embed.add_field(name=f'**{code}**', value=f'{title}')
+
+        embed.set_footer(text='Powered by OWOHUB with workshop.codes')
+
         await message.channel.send(embed=embed)
 
 @client.event
