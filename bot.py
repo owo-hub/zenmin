@@ -42,27 +42,6 @@ regionals = {'a': '\N{REGIONAL INDICATOR SYMBOL LETTER A}', 'b': '\N{REGIONAL IN
 
 # client = commands.Bot(command_prefix='!')
 
-last_url = []
-
-async def youtubelast(search):
-    global last_url
-    while not client.is_closed():
-        query_string = urllib.parse.urlencode({
-            'search_query': search
-        })
-        htm_content = urllib.request.urlopen(
-            'http://www.youtube.com/results?' + query_string + '&sp=CAI%253D'
-        )
-        search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
-        # print(search_results.__len__())
-        if len(search_results) > 0:
-            if search_results[0] not in last_url:
-                last_url.append(search_results[0])
-                await client.get_channel(650334329817268264).send('http://www.youtube.com/watch?v=' + search_results[0])
-        date = datetime.datetime.now()
-        await client.get_channel(680969443362209819).edit(name=str(date))
-        await asyncio.sleep(10)
-
 @client.event
 async def on_ready():
     print("Bot is ready.")
@@ -70,19 +49,19 @@ async def on_ready():
     print(client.user.id)
     print("--------------------")
 
-    asyncio.get_event_loop().create_task(youtubelast('오버워치 워크샵'))
-    await client.change_presence(activity=discord.Streaming(platform='Twitch', name='오떱아 도와줘', url='https://www.twitch.tv/dlwlgks4064', twitch_name='dlwlgks4064'))
+    await client.change_presence(activity=discord.Streaming(platform='Twitch', name='빈아 도와줘', url='https://www.twitch.tv/b2n1_ow/', twitch_name='b2n1_ow'))
+    # await client.get_channel(675198423502290944).send('안녕하세요 저는 빈이봇이에요! 도움이 필요할 땐 "빈아 도와줘"를 적어주세요~')
 
 @client.event
 async def on_message(message):
-    admins = [524980170554212363, 252302363052867587, 276689714592088064, 533859758583840779]
-    welcome_channel = client.get_channel(564454482608390155)
-    notice_channel = client.get_channel(679540094012882954)
-    botcmd_channel = client.get_channel(650340295061536769)
-    badword_log_channel = client.get_channel(672192045649231885)
-    owohub_id = client.get_guild(539446073320669185)
+    admins = [524980170554212363, 264231194680360960]
+    welcome_channel = client.get_channel(683228020823031833)
+    notice_channel = client.get_channel(675198423502290944)
+    # botcmd_channel = client.get_channel(650340295061536769)
+    badword_log_channel = client.get_channel(683229891126099989)
+    b2n1_id = client.get_guild(536868994808807435)
 
-    if any(x in message.content for x in badword_list) and message.guild == owohub_id:
+    if any(x in message.content for x in badword_list) and message.guild == b2n1_id:
         for badword in badword_list:
             if badword in message.content:
                 badwords.append(badword)
@@ -104,7 +83,7 @@ async def on_message(message):
     # 개인 메시지
     if isinstance(message.channel, discord.DMChannel) and message.author != client.user:
         # 받은 DM을 포스팅할 채널
-        dm_channels = [672192045649231885]
+        dm_channels = [683229891126099989]
         # 받음=빨강, 보냄=파랑
         from datetime import datetime
         embed = discord.Embed(
@@ -139,31 +118,19 @@ async def on_message(message):
             if result != '':
                 await message.channel.send(result)
 
-        if message.content.startswith('오떱아 말해 '):
-            msg = message.content[7:]
+        if message.content.startswith('빈아 말해 '):
+            msg = message.content[6:]
             await message.delete()
             await message.channel.send(msg)
 
-        if message.content.startswith('오떱아 읽어 '):
-            msg = message.content[7:]
+        if message.content.startswith('빈아 읽어 '):
+            msg = message.content[6:]
             await message.delete()
             await message.channel.send(msg, tts=True)
 
         if message.content.startswith('-diff'):
             msg = message.content[6:]
             await message.channel.send("```diff\n{0}\n```".format(msg))
-
-        if message.content.startswith("-getcode"):
-            count = 1
-            if len(message.content[8:]) > 0:
-                count = int(message.content[8:10])
-            for x in range(0, count):
-                color = "%08x" % random.randint(0, 0xFFFFFFFF)
-                daterand = random.randrange(29, 31)
-                for x in range(1, 4):
-                    color = color + "-" + "%08x" % random.randint(0, 0xFFFFFFFF)
-                await message.channel.send(
-                    color.upper() + "/ANY HyperFlick/Ultra +0.0833333333333333 days, 2020.1/" + str(daterand))
 
         if message.content.startswith("-dm"):
             author = message.mentions[0]
@@ -177,26 +144,26 @@ async def on_message(message):
             await author.send(msg)
 
     # 자유 명령어
-    if message.content.startswith("오떱아 도와줘"):
+    if message.content == "빈아 도와줘":
         from datetime import datetime
         embed = discord.Embed(
-            title='저를 부를 땐 앞에 "오떱아"를 붙여주세요!',
+            title='저를 부를 땐 앞에 "빈아"를 붙여주세요!',
             timestamp=datetime.utcnow(),
             colour=discord.Colour.green()
         )
-        embed.set_author(name='OWOHUB Bot Commands', icon_url=message.guild.icon_url)
+        embed.set_author(name='빈이봇 명령어 목록', icon_url=message.guild.icon_url)
         embed.set_thumbnail(url=message.guild.icon_url)
         embed.add_field(name="관리자 명령어", value="`말해`, `읽어`", inline=False)
-        embed.add_field(name="유저 명령어", value="`도와줘`, `안녕`, `멤버수`, `관리자`, `영웅추천`, `노래틀어줘`, `고마워`, `배너볼래`, `배너안볼래`", inline=False)
+        embed.add_field(name="유저 명령어", value="`도와줘`, `안녕`, `멤버수`, `관리자`, `영웅추천`, `고마워`", inline=False)
         embed.add_field(name="검색 명령어", value="`누구야`, `유튜브`, `배틀태그`", inline=False)
         await message.channel.send(embed=embed)
 
-    if message.content.startswith("오떱아 안녕"):
+    if message.content.startswith("빈아 안녕"):
         await message.channel.send("안녕하세요, {.mention}님 !".format(message.author))
 
-    if message.content.startswith("오떱아 누구야 "):
+    if message.content.startswith("빈아 누구야 "):
         author = message.author
-        if len(message.content[8:]) > 0:
+        if len(message.content[7:]) > 0:
             author = message.mentions[0]
         import datetime
         date = datetime.datetime.utcfromtimestamp(((int(author.id) >> 22) + 1420070400000) / 1000)
@@ -212,25 +179,17 @@ async def on_message(message):
         embed.set_thumbnail(url=author.avatar_url)
         await message.channel.send("", embed=embed)
 
-    if message.content.startswith("오떱아 노래틀어줘"):
-        from datetime import datetime
-        date = datetime.now()
-        await message.channel.send(";;p 멜론차트 {0}월 {1}일".format(str(date.month), str(date.day)))
-        await asyncio.sleep(1)
-        # await message.channel.send("인식이 안댕..")
-        await message.channel.send("{0} 죄송해요 저는 아직 노래를 틀을수 없어요!!!".format(message.author.mention))
-
-    if message.content.startswith("오떱아 고마워"):
+    if message.content.startswith("빈아 고마워"):
         thankmsg = ["헤헿", "^^", " (っ˘ڡ˘ς) ", "{0} 저도 고마워요!".format(message.author.mention), "응"]
         await message.channel.send(random.choice(thankmsg))
 
-    if message.content.startswith("오떱아 멤버수"):
+    if message.content == "빈아 멤버수":
         await message.channel.send(f"현재 **{message.guild.name}** 서버에는 **{message.guild.member_count}**명이 있어요!")
 
-    if message.content.startswith("오떱아 관리자"):
+    if message.content == "빈아 관리자":
         await message.channel.send(", ".join(str(message.guild.get_member(i)) for i in admins))
 
-    if message.content.startswith("오떱아 영웅추천"):
+    if message.content.startswith("빈아 영웅추천"):
         tank = ["D.va", "라인하르트", "레킹볼", "로드호그", "시그마", "오리사", "윈스턴", "자리야"]
         damage = ["겐지", "둠피스트", "리퍼", "맥크리", "메이", "바스티온", "솔저: 76", "솜브라", "시메트라", "애쉬", "위도우메이커", "정크랫", "토르비욘", "트레이서", "파라", "한조"]
         support = ["루시우", "메르시", "모이라", "바티스트", "브리기테", "아나", "젠야타"]
@@ -238,7 +197,7 @@ async def on_message(message):
                   "루시우", "리퍼", "맥크리", "메르시", "메이", "모이라", "바스티온", "바티스트", "브리기테",
                   "솔저: 76", "솜브라", "시그마", "시메트라", "아나", "애쉬", "오리사", "위도우메이커", "윈스턴",
                   "자리야", "정크랫", "젠야타", "토르비욘", "트레이서", "파라", "한조"]
-        role = message.content[9:10].lower()
+        role = message.content[8:9].lower()
 
         if role == "탱":
             result = random.choice(tank)
@@ -271,8 +230,8 @@ async def on_message(message):
         # await message.channel.send("{0.mention} **{1}** 하세요".format(message.author, result))
         await message.channel.send(embed=embed)
 
-    if message.content.startswith("오떱아 유튜브 "):
-        search = message.content[8:]
+    if message.content.startswith("빈아 유튜브 "):
+        search = message.content[7:]
         query_string = urllib.parse.urlencode({
             'search_query': search
         })
@@ -284,18 +243,8 @@ async def on_message(message):
         print("총 {0}개 검색, {1}번 출력".format(len(search_results), randomNum))
         await message.channel.send('{0}중 {1}\n'.format(len(search_results), randomNum) + 'http://www.youtube.com/watch?v=' + search_results[randomNum])
 
-    if message.content == "오떱아 워크샵 영상":
-        query_string = urllib.parse.urlencode({
-            'search_query': '오버워치 워크샵'
-        })
-        htm_content = urllib.request.urlopen(
-            'http://www.youtube.com/results?' + query_string + '&sp=CAI%253D'
-        )
-        search_results = re.findall('href=\"\\/watch\\?v=(.{11})', htm_content.read().decode())
-        await message.channel.send('제가 찾은 오버워치 워크샵 최신 영상입니다! ' + 'http://www.youtube.com/watch?v=' + search_results[0])
-
-    if message.content.startswith("오떱아 배틀태그 "):
-        tag = message.content[9:]
+    if message.content.startswith("빈아 배틀태그 "):
+        tag = message.content[8:]
         battletag = tag.replace("#", "-")
         print(f"Replace tag '{tag}' to '{battletag}'")
         url = 'https://playoverwatch.com/ko-kr/career/pc/' + battletag
@@ -368,28 +317,7 @@ async def on_message(message):
             embed.set_thumbnail(url=profile_img[0])
         await message.channel.send(embed=embed)
 
-    if message.content.startswith("오떱아 opgg "):
-        tag = message.content[9:]
-        battletag = tag.replace("#", "%23")
-        print(f"Replace tag '{tag}' to '{battletag}'")
-        url = 'https://overwatch.op.gg/search/?playerName=' + battletag
-        url = urllib.parse.urlsplit(url)
-        url = list(url)
-        url[2] = urllib.parse.quote(url[2])
-        profile_url = urllib.parse.urlunsplit(url)
-        print(f"{tag}'s Profile: {profile_url}")
-        htm_content = urllib.request.urlopen(profile_url).read()
-        htm_content = bs4.BeautifulSoup(htm_content, 'html.parser')
-        htm_content = str(htm_content)
-
-        print(htm_content)
-        most_hero_img = re.findall(r'https://d1u1mce87gyfbn.cloudfront.net/hero(.*?).png', htm_content)
-        player_level = re.findall(r'<div class="Level">LV.(.*?)</div>', htm_content)
-
-        print(most_hero_img)
-        print(player_level)
-
-    if message.content.startswith("오떱아 서버정보"):
+    if message.content == "빈아 서버정보":
         findbots = sum(1 for message.author in message.guild.members if message.author.bot)
 
         embed = discord.Embed()
@@ -409,99 +337,64 @@ async def on_message(message):
 
         await message.channel.send(content=f"ℹ information about **{message.guild.name}**", embed=embed)
 
-    if message.content.startswith("오떱아 입장테스트"):
+    if message.content == "빈아 입장테스트":
         from datetime import datetime
         embed = discord.Embed(
             title="🔗 서버 재참가 링크",
             description=f"Hey! {message.author.mention},",
             timestamp = datetime.utcnow(),
             colour=random.choice(colours),
-            url="https://discordapp.com/invite/E2PsZwH"
+            url="https://discord.gg/gpcBuuk"
         )
         embed.set_author(name=message.author, icon_url=message.author.avatar_url)
         embed.set_footer(text=f"유저 ID: {message.author.id}")
         # embed.set_thumbnail(url=message.author.avatar_url)
         embed.add_field(
-            name=f"Welcome to the **Overwatch Workshop** Community **OWOHUB** Server !",
-            value=f"**오버워치 워크샵** 커뮤니티 **오떱헙** 서버에 오신것을 진심으로 환영합니다! 🎊"
+            name=f"Welcome to the **B2n1's Viewers'** Server !",
+            value=f"**빈이시청자** 서버에 오신것을 진심으로 환영합니다! 🎊"
         )
         embed.add_field(
             name=f"Don't forget to read the **annoucement**!",
-            value=f"가끔 올라오는 공지사항 {notice_channel.mention}, 꼭 잊지 말고 읽어주세요!",
+            value=f"공지사항 {notice_channel.mention}, 꼭 잊지 말고 읽어주세요!",
             inline=False
         )
         await message.author.send(embed=embed)
         await message.channel.send(message.author.mention, embed=embed)
 
-    if message.content.startswith("오떱아 배너안볼래"):
-        antibanner_role = message.guild.get_role(672364190937382970)
-        if antibanner_role in message.author.roles:
-            # await message.channel.send("`이미 가려졌습니다.`")
-            return
-        await message.author.add_roles(antibanner_role)
+    if message.content.startswith("빈아 유저정보 "):
+        waiting = await message.channel.send(embed=discord.Embed(description='유저 정보를 불러오는중', color=discord.Color.blue()))
+        if len(message.mentions) > 0:
+            author = message.mentions[0]
+        else:
+            author = message.author
+        import datetime
+        registered = datetime.datetime.utcfromtimestamp(((int(author.id) >> 22) + 1420070400000) / 1000)
         embed = discord.Embed(
-            description="배너가 완벽하게 가려졌습니다.",
-            colour=discord.Colour.orange()
+            description=author.mention,
+            colour=discord.Colour.red()
         )
-        embed.set_author(name=message.author, icon_url=message.author.avatar_url)
-        embed.set_footer(text="다시 보려면 '-배너볼래'를 입력하세요.")
+        embed.set_author(name=author, icon_url=author.avatar_url)
+        embed.add_field(name="Registered", value=f'{str(registered.year)}년 {str(registered.month)}월 {str(registered.day)}일')
+        embed.add_field(name=f'Roles [{len(author.roles)-1}]',
+                        value="".join(i.mention for i in author.roles if str(i) != '@everyone'),
+                        inline=False)
+        embed.set_footer(text=f"ID: {author.id}")
+        await waiting.delete()
         await message.channel.send(embed=embed)
 
-    if message.content.startswith("오떱아 배너볼래"):
-        antibanner_role = message.guild.get_role(672364190937382970)
-        if not antibanner_role in message.author.roles:
-            # await message.channel.send("`이미 보입니다.`")
-            return
-        await message.author.remove_roles(antibanner_role)
-        embed = discord.Embed(
-            description="배너가 다시 보입니다.",
-            colour=discord.Colour.green()
-        )
-        embed.set_author(name=message.author, icon_url=message.author.avatar_url)
-        embed.set_footer(text="배너를 가릴려면 '-배너안볼래'를 입력하세요.")
-        await message.channel.send(embed=embed)
-
-    if message.content.startswith("오떱아 워크샵 검색 "):
-        search = message.content[11:]
-        print(f"Searching '{search}' from workshop.codes")
-        url = f'https://www.workshop.codes/search/{search}'
-        url = urllib.parse.urlsplit(url)
-        url = list(url)
-        url[2] = urllib.parse.quote(url[2])
-        profile_url = urllib.parse.urlunsplit(url)
-        htm_content = urllib.request.urlopen(profile_url).read()
-        htm_content = bs4.BeautifulSoup(htm_content, 'html.parser')
-        htm_content = str(htm_content)
-        # print(f"Found HTML: {htm_content}")
-
-        items = re.findall(r'<div class="item__title">\n<a href="/(.*?)</a>', htm_content)
-        print(items)
-
-        from datetime import datetime
-        embed = discord.Embed(
-            description=f'**{len(items)}** Items detected',
-            colour=discord.Color.orange(),
-            timestamp=datetime.utcnow()
-        )
-
-        embed.set_author(name=f"Search '{search}' from workshop.codes",
-                         icon_url='https://i.imgur.com/VXLlVq0.png',
-                         url=f'https://www.workshop.codes/search/{search}')
-
-        for i in items:
-            code = i[0:i.find('">')]
-            title = i[i.find('">')+2:len(i)]
-            embed.add_field(name=f'**{code}**', value=f'{title}')
-
-        embed.set_footer(text='Powered by OWOHUB with workshop.codes')
-
-        await message.channel.send(embed=embed)
+    if message.content == "빈아 현재시간":
+        import datetime
+        utcnow = datetime.datetime.utcnow()
+        time_gap = datetime.timedelta(hours=9)
+        kor_time = utcnow + time_gap
+        date = kor_time.strftime(f"%Y년 %m월 %d일 {'오전' if kor_time.strftime('%p') == 'AM' else '오후'} %I시 %M분")
+        await message.channel.send(date)
 
 @client.event
 async def on_member_join(member):
-    welcome_channel = client.get_channel(564454482608390155)
-    notice_channel = client.get_channel(679540094012882954)
-    botcmd_channel = client.get_channel(650340295061536769)
+    welcome_channel = client.get_channel(683228020823031833)
+    notice_channel = client.get_channel(675198423502290944)
+    # botcmd_channel = client.get_channel(650340295061536769)
 
     from datetime import datetime
     embed = discord.Embed(
@@ -509,18 +402,17 @@ async def on_member_join(member):
         description=f"Hey! {member.mention},",
         timestamp=datetime.utcnow(),
         colour=random.choice(colours),
-        url="https://discordapp.com/invite/E2PsZwH"
+        url="https://discord.gg/gpcBuuk"
     )
     embed.set_author(name=member, icon_url=member.avatar_url)
     embed.set_footer(text=f"유저 ID: {member.id}")
-    # embed.set_thumbnail(url=member.avatar_url)
     embed.add_field(
-        name=f"Welcome to the **Overwatch Workshop** Community **OWOHUB** Server !",
-        value=f"**오버워치 워크샵** 커뮤니티 **오떱헙** 서버에 오신것을 진심으로 환영합니다! 🎊"
+        name=f"Welcome to the **B2n1's Viewers'** Server !",
+        value=f"**빈이시청자** 서버에 오신것을 진심으로 환영합니다! 🎊"
     )
     embed.add_field(
         name=f"Don't forget to read the **annoucement**!",
-        value=f"가끔 올라오는 공지사항 {notice_channel.mention}, 꼭 잊지 말고 읽어주세요!",
+        value=f"공지사항 {notice_channel.mention}, 꼭 잊지 말고 읽어주세요!",
         inline=False
     )
     await member.send(embed=embed)
@@ -528,7 +420,7 @@ async def on_member_join(member):
 
 @client.event
 async def on_member_remove(member):
-    bye_channel = client.get_channel(675121336271503361)
+    bye_channel = client.get_channel(683232177227300900)
     msg = f"👋 잘가요 {member} {member.mention}님, 나중에 또봐요! `ಥ_ಥ`"
     await bye_channel.send(msg)
 
