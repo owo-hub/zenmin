@@ -14,10 +14,11 @@ access_token = os.environ["BOT_TOKEN"]
 
 client = discord.Client()
 
+admins = [524980170554212363, 304164780288245761, 262812931924688897, 418167691904286720, 287124567003234304]
+main_serverid = 656862634754310174
 log_channel = 683877528494014464
 notice_channel = 656865311622168619
-badword_list = ['^^ㅣ발', '^ㅣ발', '야발', '섹스', '느금마', '애미', '애비', '장애인', '느금', '보지', '자지', '니애미', 'badwordtest1', 'badwordtest2']
-badwords = []
+badword_list = ['^^ㅣ발', '^ㅣ발', '야발', '섹스', '느금마', '애미', '애비', '장애인', '느금', '보지', '자지', '니애미']
 colours = [discord.Color.dark_orange(),discord.Color.orange(),discord.Color.dark_gold(),discord.Color.gold(),discord.Color.dark_magenta(),
            discord.Color.magenta(),discord.Color.red(),discord.Color.dark_red(),discord.Color.blue(),discord.Color.dark_blue(),discord.Color.teal(),
            discord.Color.dark_teal(),discord.Color.green(),discord.Color.dark_green(),discord.Color.purple(),discord.Color.dark_purple()]
@@ -63,7 +64,7 @@ async def on_ready():
     await check.add_reaction(emoji='✅')
     await check.add_reaction(emoji='❌')"""
 
-"""@client.event
+@client.event
 async def on_disconnect():
     from datetime import datetime
     embed = discord.Embed(
@@ -72,32 +73,13 @@ async def on_disconnect():
         colour=discord.Color.red()
     )
     embed.set_author(name=client.user, icon_url=client.user.avatar_url)
-    await client.get_channel(log_channel).send(embed=embed)"""
-
-"""@client.event
-async def on_reaction_add(reaction, user):
-    global check
-    zenmin_serverid = client.get_guild(656862634754310174)
-    if reaction.message.channel == client.get_channel(684157506972549159):
-        check_role = zenmin_serverid.get_role(684154195108036760)
-        cross_role = zenmin_serverid.get_role(684159790762426377)
-        if check_role in user.roles or cross_role in user.roles:
-            return
-        if reaction.emoji == "✅":
-            await user.add_roles(check_role)
-        elif reaction.emoji == "❌":
-            await user.add_roles(cross_role)"""
-
-
+    await client.get_channel(log_channel).send(embed=embed)
 
 @client.event
 async def on_message(message):
-    admins = [524980170554212363, 304164780288245761, 262812931924688897, 418167691904286720, 287124567003234304]
-    welcome_channel = client.get_channel(656862634754310178)
-    notice_channel = client.get_channel(656865311622168619)
-    zenmin_serverid = client.get_guild(656862634754310174)
-
-    if any(x in message.content for x in badword_list) and message.guild == zenmin_serverid:
+    # Badwords Detected
+    if any(x in message.content for x in badword_list) and message.guild == client.get_guild(main_serverid):
+        badwords = []
         info = await message.channel.send(embed=discord.Embed(
             description=f"🚨 {message.author.mention} 님의 욕설이 감지됐습니다. 🚨",
             colour=discord.Color.dark_red()
@@ -122,34 +104,33 @@ async def on_message(message):
         # await asyncio.sleep(1)
         # await info.delete()
 
-    # 개인 메시지
-    if isinstance(message.channel, discord.DMChannel) and message.author != client.user:
-        # 받은 DM을 포스팅할 채널
-        dm_channels = [683877528494014464]
-        # 받음=빨강, 보냄=파랑
+    # DM
+    if isinstance(message.channel, discord.DMChannel):
+        dm_channels = [log_channel]
         from datetime import datetime
-        embed = discord.Embed(
-                description=message.author.mention + " to " + client.user.mention,
-                timestamp=datetime.utcnow(),
-                colour=discord.Colour.red()
-        )
-        """
         if message.author == client.user:
             embed = discord.Embed(
-                    description=message.author.mention + " to " + message.channel.recipient.mention,
+                    description=f"📤 {message.channel.recipient.mention} 님에게 DM을 보냈습니다.",
                     timestamp=datetime.utcnow(),
                     colour=discord.Colour.blue()
             )
-        """
-        embed.set_author(name=message.author, icon_url=message.author.avatar_url)
-        embed.add_field(name="받은 메시지:", value=message.content)
-        embed.set_footer(text="ID: {0}".format(str(message.author.id)))
+            embed.set_author(name=message.channel.recipient, icon_url=message.channel.recipient.avatar_url)
+            embed.add_field(name="보낸 메시지", value=message.content)
+            embed.set_footer(text="유저 ID: {0}".format(str(message.channel.recipient.id)))
+        else:
+            embed = discord.Embed(
+                description=f"📥 {message.author.mention} 님으로 부터 DM을 받았습니다.",
+                timestamp=datetime.utcnow(),
+                colour=discord.Colour.green()
+            )
+            embed.set_author(name=message.author, icon_url=message.author.avatar_url)
+            embed.add_field(name="받은 메시지", value=message.content)
+            embed.set_footer(text="유저 ID: {0}".format(str(message.author.id)))
         for x in dm_channels:
             await client.get_channel(x).send(embed=embed)
 
-    # 관리자 명령어
+    # Admin Commands
     if message.author.id in admins and message.author != client.user:
-
         if message.content.startswith(">>") and message.author != client.user:
             result = ''
             for x in range(2, len(message.content)):
@@ -170,46 +151,31 @@ async def on_message(message):
             await message.delete()
             await message.channel.send(msg, tts=True)
 
-        if message.content.startswith('-diff'):
-            msg = message.content[6:]
-            await message.channel.send("```diff\n{0}\n```".format(msg))
-
-        if message.content.startswith("-getcode"):
-            count = 1
-            if len(message.content[8:]) > 0:
-                count = int(message.content[8:10])
-            for x in range(0, count):
-                color = "%08x" % random.randint(0, 0xFFFFFFFF)
-                daterand = random.randrange(29, 31)
-                for x in range(1, 4):
-                    color = color + "-" + "%08x" % random.randint(0, 0xFFFFFFFF)
-                await message.channel.send(
-                    color.upper() + "/ANY HyperFlick/Ultra +0.0833333333333333 days, 2020.1/" + str(daterand))
-
-        if message.content.startswith("-dm"):
-            author = message.mentions[0]
-            msg = message.content[4:]
-            msg = msg[msg.find(' ') + 1:]
+        if message.content.startswith("젠민아 dm "):
+            msg = message.content[7:]
+            if len(message.mentions) > 0:
+                author = message.mentions[0]
+                msg = msg[msg.find(' ') + 1:]
+            else:
+                author = message.guild.get_member(int(msg[:msg.find(' ')]))
+                msg = msg[msg.find(' ') + 1:]
             await author.send(msg)
 
-        if message.content.startswith("-dmid"):
-            author = message.guild.get_member(int(message.content[4:22]))
-            msg = message.content[23:]
-            await author.send(msg)
-
-    # 자유 명령어
-    if message.content.startswith("젠민아 도와줘"):
+    # Free Commands
+    if message.content == "젠민아 도와줘":
         from datetime import datetime
         embed = discord.Embed(
-            title='저를 부를 땐 앞에 "젠민아"를 붙여주세요!',
-            timestamp=datetime.utcnow(),
+            title='🦝 저를 부를 땐 앞에 "젠민아"를 붙여주세요! 🦝',
+            # timestamp=datetime.utcnow(),
             colour=discord.Colour.green()
         )
         embed.set_author(name='젠민봇 명령어 목록', icon_url=client.user.avatar_url)
         # embed.set_thumbnail(url=message.guild.icon_url)
-        embed.add_field(name="관리자 명령어", value="`말해 {할말}`, `읽어 {할말}`", inline=False)
-        embed.add_field(name="유저 명령어", value="`도와줘`, `안녕`, `멤버수`, `관리자`, `영웅추천 {포지션}`, `고마워`, `트위치`", inline=False)
-        embed.add_field(name="검색 명령어", value="`누구야`, `유튜브`, `배틀태그`", inline=False)
+        embed.add_field(name="관리자 명령어", value="**말해 {할말}**, **읽어 {할말}**, **dm {멤버} {할말}**, **청소 {범위}**", inline=False)
+        embed.add_field(name="기본 명령어", value="**도와줘**, **멤버수**, **관리자**, **영웅추천 {포지션}**, **트위치**, **현재시간**", inline=False)
+        embed.add_field(name="검색 명령어", value="**누구야 {멤버}**, **유튜브 {키워드}**, **배틀태그 {배틀태그}**", inline=False)
+        embed.add_field(name="상호작용", value="**안녕**, **고마워**, **짖어**, **손**, **산책**, **기다려**", inline=False)
+        embed.set_footer(text="Powered by owo#4555")
         await message.channel.send(embed=embed)
 
     if message.content.startswith("젠민아 안녕"):
@@ -234,10 +200,10 @@ async def on_message(message):
         await message.channel.send("", embed=embed)
 
     if message.content.startswith("젠민아 고마워"):
-        thankmsg = ["헤헿", "^^", " (っ˘ڡ˘ς) ", "{0} 저도 고마워요!".format(message.author.mention), "응"]
+        thankmsg = ["헤헿", "^^", " (っ˘ڡ˘ς) ", f"{message.author.mention} 저도 고마워요!", "응", "내가 더 고마워.", "ㅎㅎ", " ͡~ ͜ʖ ͡° "]
         await message.channel.send(random.choice(thankmsg))
 
-    if message.content.startswith("젠민아 멤버수"):
+    if message.content == "젠민아 멤버수":
         await message.channel.send(f"현재 **{message.guild.name}** 서버에는 **{message.guild.member_count}**명이 있습니다!")
 
     if message.content.startswith("젠민아 관리자"):
@@ -398,58 +364,6 @@ async def on_message(message):
 
         await message.channel.send(content=f"ℹ information about **{message.guild.name}**", embed=embed)
 
-    if message.content.startswith("젠민아 입장테스트"):
-        from datetime import datetime
-        embed = discord.Embed(
-            title="🔗 서버 재참가 링크",
-            description=f"Hey! {message.author.mention},",
-            timestamp = datetime.utcnow(),
-            colour=random.choice(colours),
-            url="https://discordapp.com/invite/E2PsZwH"
-        )
-        embed.set_author(name=message.author, icon_url=message.author.avatar_url)
-        embed.set_footer(text=f"유저 ID: {message.author.id}")
-        # embed.set_thumbnail(url=message.author.avatar_url)
-        embed.add_field(
-            name=f"Welcome to the **Overwatch Workshop** Community **OWOHUB** Server !",
-            value=f"**오버워치 워크샵** 커뮤니티 **오떱헙** 서버에 오신것을 진심으로 환영합니다! 🎊"
-        )
-        embed.add_field(
-            name=f"Don't forget to read the **annoucement**!",
-            value=f"가끔 올라오는 공지사항 {notice_channel.mention}, 꼭 잊지 말고 읽어주세요!",
-            inline=False
-        )
-        await message.author.send(embed=embed)
-        await message.channel.send(message.author.mention, embed=embed)
-
-    if message.content.startswith("젠민아 배너안볼래"):
-        antibanner_role = message.guild.get_role(672364190937382970)
-        if antibanner_role in message.author.roles:
-            # await message.channel.send("`이미 가려졌습니다.`")
-            return
-        await message.author.add_roles(antibanner_role)
-        embed = discord.Embed(
-            description="배너가 완벽하게 가려졌습니다.",
-            colour=discord.Colour.orange()
-        )
-        embed.set_author(name=message.author, icon_url=message.author.avatar_url)
-        embed.set_footer(text="다시 보려면 '-배너볼래'를 입력하세요.")
-        await message.channel.send(embed=embed)
-
-    if message.content.startswith("젠민아 배너볼래"):
-        antibanner_role = message.guild.get_role(672364190937382970)
-        if not antibanner_role in message.author.roles:
-            # await message.channel.send("`이미 보입니다.`")
-            return
-        await message.author.remove_roles(antibanner_role)
-        embed = discord.Embed(
-            description="배너가 다시 보입니다.",
-            colour=discord.Colour.green()
-        )
-        embed.set_author(name=message.author, icon_url=message.author.avatar_url)
-        embed.set_footer(text="배너를 가릴려면 '-배너안볼래'를 입력하세요.")
-        await message.channel.send(embed=embed)
-
     if message.content.startswith("젠민아 유저정보 "):
         waiting = await message.channel.send(embed=discord.Embed(description='유저 정보를 불러오는중', color=discord.Color.blue()))
         if len(message.mentions) > 0:
@@ -476,8 +390,14 @@ async def on_message(message):
         utcnow = datetime.datetime.utcnow()
         time_gap = datetime.timedelta(hours=9)
         kor_time = utcnow + time_gap
-        date = kor_time.strftime(f"%Y년 %m월 %d일 {'오전' if kor_time.strftime('%p') == 'AM' else '오후'} %I시 %M분")
-        await message.channel.send(date)
+        serv_date = datetime.datetime.now().strftime(f"%Y년 %m월 %d일 {'오전' if datetime.datetime.now().strftime('%p') == 'AM' else '오후'} %I시 %M분")
+        utc_date = utcnow.strftime(f"%Y년 %m월 %d일 {'오전' if utcnow.strftime('%p') == 'AM' else '오후'} %I시 %M분")
+        kor_date = kor_time.strftime(f"%Y년 %m월 %d일 {'오전' if kor_time.strftime('%p') == 'AM' else '오후'} %I시 %M분")
+        await message.channel.send(
+            f"**서버 시간:** {serv_date}\n"
+            f'**세계시 (UTC):** {utc_date}\n'
+            f"**한국 표준시 (KST):** {kor_date}\n"
+        )
 
     if message.content == "젠민아 트위치":
         ready = await message.channel.send(embed=discord.Embed(
@@ -601,10 +521,36 @@ async def on_member_join(member):
 @client.event
 async def on_member_remove(member):
     bye_channel = client.get_channel(683877918568611854)
-    msg = f"👋 잘가요 **{member}** {member.mention} 님, 나중에 또봐요! **ಥ_ಥ** 👋"
+    emoji = ["ಢ‸ಢ", "ಥ_ಥ"]
+    msg = f"👋 잘가요 **{member}** {member.mention} 님, 나중에 또봐요! **{random.choice(emoji)}** 👋"
     await bye_channel.send(msg)
 
+@client.event
+async def on_reaction_add(reaction, user):
+    print()
 
+@client.event
+async def on_raw_reaction_add(payload):
+    if payload.channel_id == 684157506972549159:
+        check_role = client.get_guild(main_serverid).get_role(684154195108036760)
+        cross_role = client.get_guild(main_serverid).get_role(684159790762426377)
+        if check_role in payload.member.roles or cross_role in payload.member.roles:
+            return
+        if payload.emoji.name == "✅":
+            await payload.member.add_roles(check_role)
+        elif payload.emoji.name == "❌":
+            await payload.member.add_roles(cross_role)
+
+@client.event
+async def on_raw_reaction_remove(payload):
+    if payload.channel_id == 684157506972549159:
+        check_role = client.get_guild(main_serverid).get_role(684154195108036760)
+        cross_role = client.get_guild(main_serverid).get_role(684159790762426377)
+        member = client.get_guild(payload.guild_id).get_member(payload.user_id)
+        if payload.emoji.name == "✅" and check_role in member.roles:
+            await member.remove_roles(check_role)
+        elif payload.emoji.name == "❌" and cross_role in member.roles:
+            await member.remove_roles(cross_role)
 
 
 client.run(access_token)
